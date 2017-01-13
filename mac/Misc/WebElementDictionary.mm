@@ -71,7 +71,6 @@ static void cacheValueForKey(const void *key, const void *value, void *self)
     WTF::initializeMainThreadToProcessMainThread();
     RunLoop::initializeMainRunLoop();
 #endif
-    WebCoreObjCFinalizeOnMainThread(self);
 }
 
 + (void)initializeLookupTable
@@ -121,12 +120,6 @@ static void cacheValueForKey(const void *key, const void *value, void *self)
     [_cache release];
     [_nilValues release];
     [super dealloc];
-}
-
-- (void)finalize
-{
-    delete _result;
-    [super finalize];
 }
 
 - (void)_fillCache
@@ -211,7 +204,7 @@ static NSString* NSStringOrNil(String coreString)
 - (NSImage *)_image
 {
     Image* image = _result->image();
-    return image ? image->getNSImage() : nil;
+    return image ? image->nsImage() : nil;
 }
 
 - (NSValue *)_imageRect
