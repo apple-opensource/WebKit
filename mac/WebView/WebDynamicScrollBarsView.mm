@@ -580,7 +580,9 @@ static const unsigned cMaxUpdateScrollbarsPass = 2;
 }
 
 // This object will be the parent of the web area in WK1, so it should not be ignored.
-- (BOOL)accessibilityIsIgnored 
+ALLOW_DEPRECATED_IMPLEMENTATIONS_BEGIN
+- (BOOL)accessibilityIsIgnored
+ALLOW_DEPRECATED_IMPLEMENTATIONS_END
 {
     return NO;
 }

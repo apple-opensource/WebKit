@@ -43,10 +43,8 @@ public:
 
     void beginDrag(WebCore::DragItem, WebCore::Frame&, const WebCore::IntPoint& mouseDownPosition, const WebCore::IntPoint& mouseDraggedPosition, WebCore::DataTransfer&, WebCore::DragSourceAction) override;
 
-    void declareAndWriteDragImage(const String& pasteboardName, WebCore::Element&, const WebCore::URL&, const String&, WebCore::Frame*) override;
+    void declareAndWriteDragImage(const String& pasteboardName, WebCore::Element&, const URL&, const String&, WebCore::Frame*) override;
     void didConcludeEditDrag() override;
-
-    void prepareToDragPromisedBlob(const WebCore::PromisedBlobInfo&) final { }
 
 private:
     WebView* m_webView;

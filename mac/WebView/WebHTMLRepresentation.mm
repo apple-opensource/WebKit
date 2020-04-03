@@ -42,6 +42,7 @@
 #import "WebTypesInternal.h"
 #import "WebView.h"
 #import <Foundation/NSURLResponse.h>
+#import <JavaScriptCore/RegularExpression.h>
 #import <WebCore/Document.h>
 #import <WebCore/DocumentLoader.h>
 #import <WebCore/Editor.h>
@@ -61,7 +62,6 @@
 #import <WebCore/ScriptDisallowedScope.h>
 #import <WebCore/TextResourceDecoder.h>
 #import <WebKitLegacy/DOMHTMLInputElement.h>
-#import <yarr/RegularExpression.h>
 #import <wtf/Assertions.h>
 #import <wtf/NeverDestroyed.h>
 #import <wtf/StdLibExtras.h>
@@ -104,25 +104,25 @@ static RetainPtr<NSArray> newArrayWithStrings(const HashSet<String, ASCIICaseIns
 
 + (NSArray *)supportedMediaMIMETypes
 {
-    static NSArray *staticSupportedMediaMIMETypes = newArrayWithStrings(MIMETypeRegistry::getSupportedMediaMIMETypes()).leakRef();
+    static NSArray *staticSupportedMediaMIMETypes = newArrayWithStrings(MIMETypeRegistry::supportedMediaMIMETypes()).leakRef();
     return staticSupportedMediaMIMETypes;
 }
 
 + (NSArray *)supportedNonImageMIMETypes
 {
-    static NSArray *staticSupportedNonImageMIMETypes = newArrayWithStrings(MIMETypeRegistry::getSupportedNonImageMIMETypes()).leakRef();
+    static NSArray *staticSupportedNonImageMIMETypes = newArrayWithStrings(MIMETypeRegistry::supportedNonImageMIMETypes()).leakRef();
     return staticSupportedNonImageMIMETypes;
 }
 
 + (NSArray *)supportedImageMIMETypes
 {
-    static NSArray *staticSupportedImageMIMETypes = newArrayWithStrings(MIMETypeRegistry::getSupportedImageMIMETypes()).leakRef();
+    static NSArray *staticSupportedImageMIMETypes = newArrayWithStrings(MIMETypeRegistry::supportedImageMIMETypes()).leakRef();
     return staticSupportedImageMIMETypes;
 }
 
 + (NSArray *)unsupportedTextMIMETypes
 {
-    static NSArray *staticUnsupportedTextMIMETypes = newArrayWithStrings(MIMETypeRegistry::getUnsupportedTextMIMETypes()).leakRef();
+    static NSArray *staticUnsupportedTextMIMETypes = newArrayWithStrings(MIMETypeRegistry::unsupportedTextMIMETypes()).leakRef();
     return staticUnsupportedTextMIMETypes;
 }
 
@@ -258,7 +258,7 @@ static RetainPtr<NSArray> newArrayWithStrings(const HashSet<String, ASCIICaseIns
     return [[_private->dataSource webFrame] DOMDocument];
 }
 
-#if !PLATFORM(IOS)
+#if !PLATFORM(IOS_FAMILY)
 - (NSAttributedString *)attributedText
 {
     // FIXME: Implement
@@ -285,7 +285,7 @@ static HTMLFormElement* formElementFromDOMElement(DOMElement *element)
 
     ScriptDisallowedScope::InMainThread scriptDisallowedScope;
     auto& elements = formElement->unsafeAssociatedElements();
-    AtomicString targetName = name;
+    AtomString targetName = name;
     for (unsigned i = 0; i < elements.size(); i++) {
         FormAssociatedElement& element = *elements[i];
         if (element.name() == targetName)
@@ -455,7 +455,7 @@ static NSString* searchForLabelsBeforeElement(Frame* frame, NSArray* labels, Ele
                 return result;
             }
             searchedCellAbove = true;
-        } else if (n->isTextNode() && n->renderer() && n->renderer()->style().visibility() == VISIBLE) {
+        } else if (n->isTextNode() && n->renderer() && n->renderer()->style().visibility() == Visibility::Visible) {
             // For each text chunk, run the regexp
             String nodeString = n->nodeValue();
             // add 100 for slop, to make it more likely that we'll search whole nodes

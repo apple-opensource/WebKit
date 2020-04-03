@@ -24,17 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
 #include "PluginDatabase.h"
 
-#include "Frame.h"
-#include "URL.h"
 #include "PluginPackage.h"
+#include <WebCore/Frame.h>
 #include <stdlib.h>
+#include <wtf/URL.h>
 #include <wtf/text/CString.h>
 
 #if ENABLE(NETSCAPE_PLUGIN_METADATA_CACHE)
-#include "FileSystem.h"
+#include <wtf/FileSystem.h>
 #endif
 
 namespace WebCore {
@@ -126,9 +125,10 @@ bool PluginDatabase::refresh()
 
     auto pathsEnd = paths.end();
     for (auto it = paths.begin(); it != pathsEnd; ++it) {
-        time_t lastModified;
-        if (!FileSystem::getFileModificationTime(*it, lastModified))
+        auto lastModifiedTime = FileSystem::getFileModificationTime(*it);
+        if (!lastModifiedTime)
             continue;
+        time_t lastModified = lastModifiedTime->secondsSinceEpoch().secondsAs<time_t>();
 
         pathsWithTimes.add(*it, lastModified);
 
@@ -141,7 +141,7 @@ bool PluginDatabase::refresh()
             remove(oldPackage.get());
         }
 
-        RefPtr<PluginPackage> package = PluginPackage::createPackage(*it, lastModified);
+        auto package = PluginPackage::createPackage(*it, lastModified);
         if (package && add(package.releaseNonNull()))
             pluginSetChanged = true;
     }

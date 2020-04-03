@@ -30,6 +30,7 @@
 #import <WebCore/CSSRuleList.h>
 #import <WebCore/CSSStyleDeclaration.h>
 #import <WebCore/Comment.h>
+#import <WebCore/DocumentFullscreen.h>
 #import "DOMAbstractViewInternal.h"
 #import "DOMAttrInternal.h"
 #import "DOMCDATASectionInternal.h"
@@ -68,7 +69,7 @@
 #import <WebCore/HTMLElement.h>
 #import <WebCore/HTMLHeadElement.h>
 #import <WebCore/HTMLScriptElement.h>
-#import <WebCore/JSMainThreadExecState.h>
+#import <WebCore/JSExecState.h>
 #import <WebCore/NameNodeList.h>
 #import <WebCore/NativeNodeFilter.h>
 #import <WebCore/Node.h>
@@ -82,12 +83,12 @@
 #import <WebCore/Text.h>
 #import <WebCore/ThreadCheck.h>
 #import <WebCore/TreeWalker.h>
-#import <WebCore/URL.h>
 #import <WebCore/WebScriptObjectPrivate.h>
 #import <WebCore/XPathExpression.h>
 #import <WebCore/XPathNSResolver.h>
 #import <WebCore/XPathResult.h>
 #import <wtf/GetPtr.h>
+#import <wtf/URL.h>
 
 #define IMPL static_cast<WebCore::Document*>(reinterpret_cast<WebCore::Node*>(_internal))
 
@@ -162,7 +163,7 @@
 - (DOMAbstractView *)defaultView
 {
     WebCore::JSMainThreadNullState state;
-    return kit(WTF::getPtr(IMPL->defaultView()));
+    return kit(WTF::getPtr(IMPL->windowProxy()));
 }
 
 - (DOMStyleSheetList *)styleSheets
@@ -326,20 +327,16 @@
 
 - (NSString *)preferredStylesheetSet
 {
-    WebCore::JSMainThreadNullState state;
-    return IMPL->preferredStylesheetSet();
+    return nil;
 }
 
 - (NSString *)selectedStylesheetSet
 {
-    WebCore::JSMainThreadNullState state;
-    return IMPL->selectedStylesheetSet();
+    return nil;
 }
 
 - (void)setSelectedStylesheetSet:(NSString *)newSelectedStylesheetSet
 {
-    WebCore::JSMainThreadNullState state;
-    IMPL->setSelectedStylesheetSet(newSelectedStylesheetSet);
 }
 
 - (DOMElement *)activeElement
@@ -359,31 +356,31 @@
 - (BOOL)webkitIsFullScreen
 {
     WebCore::JSMainThreadNullState state;
-    return IMPL->webkitIsFullScreen();
+    return WebCore::DocumentFullscreen::webkitIsFullScreen(*IMPL);
 }
 
 - (BOOL)webkitFullScreenKeyboardInputAllowed
 {
     WebCore::JSMainThreadNullState state;
-    return IMPL->webkitFullScreenKeyboardInputAllowed();
+    return WebCore::DocumentFullscreen::webkitFullScreenKeyboardInputAllowed(*IMPL);
 }
 
 - (DOMElement *)webkitCurrentFullScreenElement
 {
     WebCore::JSMainThreadNullState state;
-    return kit(WTF::getPtr(IMPL->webkitCurrentFullScreenElementForBindings()));
+    return kit(WTF::getPtr(WebCore::DocumentFullscreen::webkitCurrentFullScreenElement(*IMPL)));
 }
 
 - (BOOL)webkitFullscreenEnabled
 {
     WebCore::JSMainThreadNullState state;
-    return IMPL->webkitFullscreenEnabled();
+    return WebCore::DocumentFullscreen::webkitFullscreenEnabled(*IMPL);
 }
 
 - (DOMElement *)webkitFullscreenElement
 {
     WebCore::JSMainThreadNullState state;
-    return kit(WTF::getPtr(IMPL->webkitFullscreenElementForBindings()));
+    return kit(WTF::getPtr(WebCore::DocumentFullscreen::webkitFullscreenElement(*IMPL)));
 }
 
 #endif
@@ -422,7 +419,7 @@
 - (DOMElement *)scrollingElement
 {
     WebCore::JSMainThreadNullState state;
-    return kit(WTF::getPtr(IMPL->scrollingElement()));
+    return kit(WTF::getPtr(IMPL->scrollingElementForAPI()));
 }
 
 - (DOMHTMLCollection *)children
@@ -578,8 +575,7 @@
 
 - (DOMCSSStyleDeclaration *)getOverrideStyle:(DOMElement *)element pseudoElement:(NSString *)pseudoElement
 {
-    WebCore::JSMainThreadNullState state;
-    return kit(WTF::getPtr(IMPL->getOverrideStyle(core(element), pseudoElement)));
+    return nil;
 }
 
 static RefPtr<WebCore::XPathNSResolver> wrap(id <DOMXPathNSResolver> resolver)
@@ -684,7 +680,7 @@ static RefPtr<WebCore::XPathNSResolver> wrap(id <DOMXPathNSResolver> resolver)
     WebCore::JSMainThreadNullState state;
     if (!element)
         raiseTypeErrorException();
-    WebCore::DOMWindow* dv = IMPL->defaultView();
+    WebCore::DOMWindow* dv = IMPL->domWindow();
     if (!dv)
         return nil;
     return kit(WTF::getPtr(dv->getComputedStyle(*core(element), pseudoElement)));
@@ -698,7 +694,7 @@ static RefPtr<WebCore::XPathNSResolver> wrap(id <DOMXPathNSResolver> resolver)
 - (DOMCSSRuleList *)getMatchedCSSRules:(DOMElement *)element pseudoElement:(NSString *)pseudoElement authorOnly:(BOOL)authorOnly
 {
     WebCore::JSMainThreadNullState state;
-    WebCore::DOMWindow* dv = IMPL->defaultView();
+    WebCore::DOMWindow* dv = IMPL->domWindow();
     if (!dv)
         return nil;
     return kit(WTF::getPtr(dv->getMatchedCSSRules(core(element), pseudoElement, authorOnly)));
@@ -721,13 +717,13 @@ static RefPtr<WebCore::XPathNSResolver> wrap(id <DOMXPathNSResolver> resolver)
 - (void)webkitCancelFullScreen
 {
     WebCore::JSMainThreadNullState state;
-    IMPL->webkitCancelFullScreen();
+    WebCore::DocumentFullscreen::webkitCancelFullScreen(*IMPL);
 }
 
 - (void)webkitExitFullscreen
 {
     WebCore::JSMainThreadNullState state;
-    IMPL->webkitExitFullscreen();
+    WebCore::DocumentFullscreen::webkitExitFullscreen(*IMPL);
 }
 
 #endif
@@ -735,7 +731,7 @@ static RefPtr<WebCore::XPathNSResolver> wrap(id <DOMXPathNSResolver> resolver)
 - (DOMElement *)getElementById:(NSString *)elementId
 {
     WebCore::JSMainThreadNullState state;
-    return kit(WTF::getPtr(IMPL->getElementById(AtomicString(elementId))));
+    return kit(WTF::getPtr(IMPL->getElementById(AtomString(elementId))));
 }
 
 - (DOMElement *)querySelector:(NSString *)selectors
@@ -791,7 +787,7 @@ static RefPtr<WebCore::XPathNSResolver> wrap(id <DOMXPathNSResolver> resolver)
 
 - (DOMCSSStyleDeclaration *)getOverrideStyle:(DOMElement *)element :(NSString *)pseudoElement
 {
-    return [self getOverrideStyle:element pseudoElement:pseudoElement];
+    return nil;
 }
 
 - (DOMXPathExpression *)createExpression:(NSString *)expression :(id <DOMXPathNSResolver>)resolver

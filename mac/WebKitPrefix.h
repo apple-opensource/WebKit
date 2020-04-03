@@ -28,6 +28,9 @@
 
 #if defined(HAVE_CONFIG_H) && HAVE_CONFIG_H && defined(BUILDING_WITH_CMAKE)
 #include "cmakeconfig.h"
+#ifndef JSC_API_AVAILABLE
+#define JSC_API_AVAILABLE(...)
+#endif
 #endif
 
 #include <TargetConditionals.h>
@@ -61,7 +64,6 @@
 #endif
 
 #if !TARGET_OS_IPHONE
-#import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
 
 #ifndef CGFLOAT_DEFINED
@@ -83,10 +85,10 @@ typedef float CGFloat;
 #endif
 #endif
 
+#include <JavaScriptCore/JSExportMacros.h>
+#include <WebCore/PlatformExportMacros.h>
 #include <pal/ExportMacros.h>
 #include <wtf/ExportMacros.h>
-#include <runtime/JSExportMacros.h>
-#include <WebCore/PlatformExportMacros.h>
 
 /* Work around bug with C++ library that screws up Objective-C++ when exception support is disabled. */
 #undef try

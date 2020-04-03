@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2016 Apple Inc. All rights reserved.
+ * Copyright (C) 2018 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,32 +23,19 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WebUserMediaClient_h
-#define WebUserMediaClient_h
+#pragma once
 
-#if ENABLE(MEDIA_STREAM)
+#include <WebCore/SwitchingGPUClient.h>
 
-#import <WebCore/UserMediaClient.h>
+namespace WebKit {
 
-@class WebView;
-
-class WebUserMediaClient final : public WebCore::UserMediaClient {
+class WebSwitchingGPUClient : public WebCore::SwitchingGPUClient {
 public:
-    WebUserMediaClient(WebView*);
-    ~WebUserMediaClient();
+    static WebSwitchingGPUClient& singleton();
+    virtual ~WebSwitchingGPUClient() = default;
 
-    // UserMediaClient
-    void requestUserMediaAccess(WebCore::UserMediaRequest&) final;
-    void cancelUserMediaAccessRequest(WebCore::UserMediaRequest&) final;
-
-    void enumerateMediaDevices(WebCore::MediaDevicesEnumerationRequest&) final;
-    void cancelMediaDevicesEnumerationRequest(WebCore::MediaDevicesEnumerationRequest&) final;
-
-    void pageDestroyed() final;
-
-private:
-    WebView* m_webView;
+    void requestHighPerformanceGPU() override { };
+    void releaseHighPerformanceGPU() override { };
 };
 
-#endif
-#endif
+}

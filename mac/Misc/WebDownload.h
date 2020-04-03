@@ -26,16 +26,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import <Foundation/Foundation.h>
+#import <WebKitLegacy/WebKitAvailability.h>
+
 #ifndef WebDownload_h
 #define WebDownload_h
 
-#if !TARGET_OS_IPHONE || (defined USE_APPLE_INTERNAL_SDK && USE_APPLE_INTERNAL_SDK)
+#if (defined TARGET_OS_IOSMAC && TARGET_OS_IOSMAC) || (defined(TARGET_OS_WATCH) && TARGET_OS_WATCH)
+#import <CFNetwork/CFNSURLConnection.h>
+#elif !TARGET_OS_IPHONE || (defined USE_APPLE_INTERNAL_SDK && USE_APPLE_INTERNAL_SDK)
 #import <Foundation/NSURLDownload.h>
 #else
-@interface NSURLDownload : NSObject
-@end
-
-@protocol NSURLDownloadDelegate;
+#import <WebKitLegacy/NSURLDownloadSPI.h>
 #endif
 
 #if TARGET_OS_IPHONE
@@ -54,8 +56,7 @@
     panel, as either a sheet or window. It provides no extra methods,
     but does have one additional delegate method.
 */
-
-
+WEBKIT_CLASS_DEPRECATED_MAC(10_4, 10_14)
 @interface WebDownload : NSURLDownload
 {
 @package
@@ -69,6 +70,7 @@
     @discussion The WebDownloadDelegate delegate has one extra method used to choose
     the right window when automatically prompting with a sheet.
 */
+WEBKIT_DEPRECATED_MAC(10_4, 10_14)
 @protocol WebDownloadDelegate <NSURLDownloadDelegate>
 
 @optional

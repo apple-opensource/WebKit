@@ -28,10 +28,10 @@
 
 #import "WebStringTruncator.h"
 
+#import <JavaScriptCore/InitializeThreading.h>
 #import <WebCore/FontCascade.h>
 #import <WebCore/FontPlatformData.h>
 #import <WebCore/StringTruncator.h>
-#import <runtime/InitializeThreading.h>
 #import <wtf/MainThread.h>
 #import <wtf/NeverDestroyed.h>
 
@@ -42,7 +42,7 @@ static WebCore::FontCascade& fontFromNSFont(NSFont *font)
     if ([font isEqual:currentNSFont.get().get()])
         return currentFont;
     currentNSFont.get() = font;
-    currentFont.get() = WebCore::FontCascade(WebCore::FontPlatformData(reinterpret_cast<CTFontRef>(font), [font pointSize]));
+    currentFont.get() = WebCore::FontCascade(WebCore::FontPlatformData((__bridge CTFontRef)font, [font pointSize]));
     return currentFont;
 }
 

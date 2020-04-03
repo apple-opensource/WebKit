@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Apple Inc. All rights reserved.
+ * Copyright (C) 2014-2019 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,7 +32,7 @@
 #import "DOMRangeInternal.h"
 #import "WebElementDictionary.h"
 #import "WebFrameInternal.h"
-#import "WebHTMLView.h"
+#import "WebFrameView.h"
 #import "WebHTMLViewInternal.h"
 #import "WebUIDelegatePrivate.h"
 #import "WebViewInternal.h"
@@ -46,6 +46,7 @@
 #import <WebCore/FrameView.h>
 #import <WebCore/GeometryUtilities.h>
 #import <WebCore/HTMLConverter.h>
+#import <WebCore/NodeRenderStyle.h>
 #import <WebCore/Page.h>
 #import <WebCore/RenderElement.h>
 #import <WebCore/RenderObject.h>
@@ -144,11 +145,12 @@ using namespace WebCore;
 
 - (void)performHitTestAtPoint:(NSPoint)viewPoint
 {
-    Frame* coreFrame = core([[[[_webView _selectedOrMainFrame] frameView] documentView] _frame]);
+    Frame* coreFrame = core([_webView _selectedOrMainFrame]);
     if (!coreFrame)
         return;
-    _hitTestResult = coreFrame->eventHandler().hitTestResultAtPoint(IntPoint(viewPoint));
-    coreFrame->eventHandler().setImmediateActionStage(ImmediateActionStage::PerformedHitTest);
+
+    _hitTestResult = coreFrame->eventHandler().hitTestResultAtPoint(IntPoint(viewPoint), HitTestRequest::ReadOnly | HitTestRequest::Active | HitTestRequest::DisallowUserAgentShadowContent | HitTestRequest::AllowChildFrameContent);
+    coreFrame->mainFrame().eventHandler().setImmediateActionStage(ImmediateActionStage::PerformedHitTest);
 
     if (Element* element = _hitTestResult.targetElement())
         _contentPreventsDefault = element->dispatchMouseForceWillBegin();
@@ -204,10 +206,9 @@ using namespace WebCore;
     if (immediateActionRecognizer != _immediateActionRecognizer)
         return;
 
-    Frame* coreFrame = core([[[[_webView _selectedOrMainFrame] frameView] documentView] _frame]);
-    if (!coreFrame)
-        return;
-    coreFrame->eventHandler().setImmediateActionStage(ImmediateActionStage::ActionUpdated);
+    if (Frame* coreFrame = [_webView _mainCoreFrame])
+        coreFrame->eventHandler().setImmediateActionStage(ImmediateActionStage::ActionUpdated);
+
     if (_contentPreventsDefault)
         return;
 
@@ -219,12 +220,7 @@ using namespace WebCore;
     if (immediateActionRecognizer != _immediateActionRecognizer)
         return;
 
-    NSView *documentView = [[[_webView _selectedOrMainFrame] frameView] documentView];
-    if (![documentView isKindOfClass:[WebHTMLView class]])
-        return;
-
-    Frame* coreFrame = core([(WebHTMLView *)documentView _frame]);
-    if (coreFrame) {
+    if (Frame* coreFrame = [_webView _mainCoreFrame]) {
         ImmediateActionStage lastStage = coreFrame->eventHandler().immediateActionStage();
         if (lastStage == ImmediateActionStage::ActionUpdated)
             coreFrame->eventHandler().setImmediateActionStage(ImmediateActionStage::ActionCancelledAfterUpdate);
@@ -243,10 +239,8 @@ using namespace WebCore;
     if (immediateActionRecognizer != _immediateActionRecognizer)
         return;
 
-    Frame* coreFrame = core([[[[_webView _selectedOrMainFrame] frameView] documentView] _frame]);
-    if (!coreFrame)
-        return;
-    coreFrame->eventHandler().setImmediateActionStage(ImmediateActionStage::ActionCompleted);
+    if (Frame* coreFrame = [_webView _mainCoreFrame])
+        coreFrame->eventHandler().setImmediateActionStage(ImmediateActionStage::ActionCompleted);
 
     [_webView _setTextIndicatorAnimationProgress:1];
     [_webView _setMaintainsInactiveSelection:NO];
@@ -262,17 +256,17 @@ using namespace WebCore;
     NSURL *url = _hitTestResult.absoluteLinkURL();
     NSString *absoluteURLString = [url absoluteString];
     if (url && _hitTestResult.URLElement()) {
-        if (protocolIs(absoluteURLString, "mailto")) {
+        if (WTF::protocolIs(absoluteURLString, "mailto")) {
             _type = WebImmediateActionMailtoLink;
             return [self _animationControllerForDataDetectedLink];
         }
 
-        if (protocolIs(absoluteURLString, "tel")) {
+        if (WTF::protocolIs(absoluteURLString, "tel")) {
             _type = WebImmediateActionTelLink;
             return [self _animationControllerForDataDetectedLink];
         }
 
-        if (WebCore::protocolIsInHTTPFamily(absoluteURLString)) {
+        if (WTF::protocolIsInHTTPFamily(absoluteURLString)) {
             _type = WebImmediateActionLinkPreview;
 
             RefPtr<Range> linkRange = rangeOfContents(*_hitTestResult.URLElement());
@@ -511,8 +505,8 @@ static IntRect elementBoundingBoxInWindowCoordinatesFromNode(Node* node)
         return popupInfo;
     }
 
-    RenderObject* renderer = range.startContainer().renderer();
-    const RenderStyle& style = renderer->style();
+    const RenderStyle* style = range.startContainer().renderStyle();
+    float scaledDescent = style ? style->fontMetrics().descent() * frame->page()->pageScaleFactor() : 0;
 
     Vector<FloatQuad> quads;
     range.absoluteTextQuads(quads);
@@ -523,7 +517,7 @@ static IntRect elementBoundingBoxInWindowCoordinatesFromNode(Node* node)
 
     IntRect rangeRect = frame->view()->contentsToWindow(quads[0].enclosingBoundingBox());
 
-    popupInfo.origin = NSMakePoint(rangeRect.x(), rangeRect.y() + (style.fontMetrics().descent() * frame->page()->pageScaleFactor()));
+    popupInfo.origin = NSMakePoint(rangeRect.x(), rangeRect.y() + scaledDescent);
     popupInfo.options = lookupOptions;
 
     NSAttributedString *nsAttributedString = editingAttributedStringFromRange(range, IncludeImagesInAttributedString::No);
@@ -534,10 +528,10 @@ static IntRect elementBoundingBoxInWindowCoordinatesFromNode(Node* node)
         RetainPtr<NSMutableDictionary> scaledAttributes = adoptNS([attributes mutableCopy]);
 
         NSFont *font = [scaledAttributes objectForKey:NSFontAttributeName];
-        if (font) {
-            font = [fontManager convertFont:font toSize:[font pointSize] * frame->page()->pageScaleFactor()];
+        if (font)
+            font = [fontManager convertFont:font toSize:font.pointSize * frame->page()->pageScaleFactor()];
+        if (font)
             [scaledAttributes setObject:font forKey:NSFontAttributeName];
-        }
 
         [scaledNSAttributedString addAttributes:scaledAttributes.get() range:attributeRange];
     }];
@@ -553,7 +547,7 @@ static IntRect elementBoundingBoxInWindowCoordinatesFromNode(Node* node)
 
 - (id<NSImmediateActionAnimationController>)_animationControllerForText
 {
-    if (!getLULookupDefinitionModuleClass())
+    if (!PAL::getLULookupDefinitionModuleClass())
         return nil;
 
     Node* node = _hitTestResult.innerNode();
@@ -564,8 +558,7 @@ static IntRect elementBoundingBoxInWindowCoordinatesFromNode(Node* node)
     if (!frame)
         return nil;
 
-    NSDictionary *options = nil;
-    auto dictionaryRange = DictionaryLookup::rangeAtHitTestResult(_hitTestResult, &options);
+    auto [dictionaryRange, options] = DictionaryLookup::rangeAtHitTestResult(_hitTestResult);
     if (!dictionaryRange)
         return nil;
 

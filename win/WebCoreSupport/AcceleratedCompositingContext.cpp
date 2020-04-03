@@ -35,7 +35,6 @@
 #include <WebCore/FrameView.h>
 #include <WebCore/GraphicsLayerTextureMapper.h>
 #include <WebCore/HWndDC.h>
-#include <WebCore/MainFrame.h>
 #include <WebCore/Page.h>
 #include <WebCore/Settings.h>
 #include <WebCore/SystemInfo.h>
@@ -43,8 +42,7 @@
 #include <WebCore/TextureMapperGL.h>
 #include <WebCore/TextureMapperLayer.h>
 
-#if USE(OPENGL_ES_2)
-#define GL_GLEXT_PROTOTYPES 1
+#if USE(OPENGL_ES)
 #include <GLES2/gl2.h>
 #else
 #include <GL/gl.h>
@@ -54,9 +52,9 @@ using namespace WebCore;
 
 AcceleratedCompositingContext::AcceleratedCompositingContext(WebView& webView)
     : m_webView(webView)
-    , m_layerFlushTimer(*this)
     , m_context(nullptr)
     , m_window(0)
+    , m_layerFlushTimer(*this)
 {
 }
 
@@ -98,7 +96,7 @@ void AcceleratedCompositingContext::initialize()
     m_nonCompositedContentLayer->setName("Non-composited content");
 #endif
 
-    m_rootLayer->addChild(m_nonCompositedContentLayer.get());
+    m_rootLayer->addChild(*m_nonCompositedContentLayer);
     m_nonCompositedContentLayer->setNeedsDisplay();
 
     // The creation of the TextureMapper needs an active OpenGL context.
@@ -212,7 +210,7 @@ void AcceleratedCompositingContext::setRootCompositingLayer(GraphicsLayer* graph
         return;
 
     m_nonCompositedContentLayer->removeAllChildren();
-    m_nonCompositedContentLayer->addChild(graphicsLayer);
+    m_nonCompositedContentLayer->addChild(*graphicsLayer);
 
     stopAnyPendingLayerFlush();
 
@@ -319,8 +317,7 @@ bool AcceleratedCompositingContext::acceleratedCompositingAvailable()
     IntRect targetRect(0, 0, width, height);
     IntPoint offset(0, 0);
     int bytesPerLine = width * 4;
-    BitmapTexture::UpdateContentsFlag flags = BitmapTexture::UpdateCanModifyOriginalImageData;
-    texture->updateContents(data, targetRect, offset, bytesPerLine, flags);
+    texture->updateContents(data, targetRect, offset, bytesPerLine);
 
     // Render texture.
     textureMapper->beginPainting();
@@ -403,7 +400,7 @@ void AcceleratedCompositingContext::layerFlushTimerFired()
         scheduleLayerFlush();
 }
 
-void AcceleratedCompositingContext::paintContents(const GraphicsLayer*, GraphicsContext& context, GraphicsLayerPaintingPhase, const FloatRect& rectToPaint, GraphicsLayerPaintBehavior)
+void AcceleratedCompositingContext::paintContents(const GraphicsLayer*, GraphicsContext& context, OptionSet<GraphicsLayerPaintingPhase>, const FloatRect& rectToPaint, GraphicsLayerPaintBehavior)
 {
     context.save();
     context.clip(rectToPaint);

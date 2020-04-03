@@ -25,9 +25,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
+#if ENABLE(NETSCAPE_PLUGIN_API)
 #include "PluginView.h"
 
+#include "PluginDatabase.h"
+#include "PluginDebug.h"
+#include "PluginMainThreadScheduler.h"
+#include "PluginMessageThrottlerWin.h"
+#include "PluginPackage.h"
+#include <JavaScriptCore/JSCJSValue.h>
+#include <JavaScriptCore/JSLock.h>
 #include <WebCore/BitmapImage.h>
 #include <WebCore/BitmapInfo.h>
 #include <WebCore/BridgeJSC.h>
@@ -56,26 +63,18 @@
 #include <WebCore/MouseEvent.h>
 #include <WebCore/Page.h>
 #include <WebCore/PlatformMouseEvent.h>
-#include "PluginDatabase.h"
-#include "PluginDebug.h"
-#include "PluginMainThreadScheduler.h"
-#include "PluginMessageThrottlerWin.h"
-#include "PluginPackage.h"
 #include <WebCore/RenderWidget.h>
 #include <WebCore/Settings.h>
 #include <WebCore/WebCoreInstanceHandle.h>
 #include <WebCore/c_instance.h>
 #include <WebCore/npruntime_impl.h>
 #include <WebCore/runtime_root.h>
-#include <runtime/JSCJSValue.h>
-#include <runtime/JSLock.h>
 #include <wtf/ASCIICType.h>
 #include <wtf/text/WTFString.h>
-#include <wtf/text/win/WCharStringExtras.h>
 #include <wtf/win/GDIObject.h>
 
 #if USE(CAIRO)
-#include "PlatformContextCairo.h"
+#include <WebCore/PlatformContextCairo.h>
 #include <cairo-win32.h>
 #endif
 
@@ -84,15 +83,9 @@ static inline HWND windowHandleForPageClient(PlatformPageClient client)
     return client;
 }
 
-using JSC::ExecState;
-using JSC::JSLock;
-using JSC::JSObject;
-
-using std::min;
-
-using namespace WTF;
-
 namespace WebCore {
+
+using JSC::JSLock;
 
 using namespace HTMLNames;
 
@@ -761,13 +754,13 @@ NPError PluginView::handlePostReadFile(Vector<char>& buffer, uint32_t len, const
 
     // Get file info
     WIN32_FILE_ATTRIBUTE_DATA attrs;
-    if (!GetFileAttributesExW(stringToNullTerminatedWChar(filename).data(), GetFileExInfoStandard, &attrs))
+    if (!GetFileAttributesExW(filename.wideCharacters().data(), GetFileExInfoStandard, &attrs))
         return NPERR_FILE_NOT_FOUND;
 
     if (attrs.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         return NPERR_FILE_NOT_FOUND;
 
-    HANDLE fileHandle = CreateFileW(stringToNullTerminatedWChar(filename).data(), FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    HANDLE fileHandle = CreateFileW(filename.wideCharacters().data(), FILE_READ_DATA, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     
     if (fileHandle == INVALID_HANDLE_VALUE)
         return NPERR_FILE_NOT_FOUND;
@@ -977,3 +970,5 @@ float PluginView::deviceScaleFactor() const
 }
 
 } // namespace WebCore
+
+#endif
