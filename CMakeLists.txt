@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 include(WebKitCommon)
+include(target/TargetWTF)
+include(target/TargetJavaScriptCore)
+include(target/PAL)
+include(target/WebCore)
 set_property(DIRECTORY . PROPERTY FOLDER "WebKitLegacy")
 
 set(WebKitLegacy_SOURCES
+    Storage/InprocessIDBServer.cpp
     Storage/StorageAreaImpl.cpp
     Storage/StorageAreaSync.cpp
     Storage/StorageNamespaceImpl.cpp
@@ -21,18 +26,13 @@ set(WebKitLegacy_PRIVATE_INCLUDE_DIRECTORIES
     "${CMAKE_BINARY_DIR}"
     "${WEBKITLEGACY_DIR}/Storage"
     "${WEBKITLEGACY_DIR}/WebCoreSupport"
-    "${WebCore_PRIVATE_FRAMEWORK_HEADERS_DIR}"
     "${WebKitLegacy_DERIVED_SOURCES_DIR}"
 )
 
-set(WebKitLegacy_SYSTEM_INCLUDE_DIRECTORIES
-    "${ICU_INCLUDE_DIRS}"
-)
-
-set(WebKitLegacy_LIBRARIES
-    PRIVATE JavaScriptCore${DEBUG_SUFFIX}
-    PRIVATE WebCore${DEBUG_SUFFIX}
-    PRIVATE PAL${DEBUG_SUFFIX}
+set(WebKitLegacy_PRIVATE_LIBRARIES
+    WebKit::JavaScriptCore
+    WebKit::PAL
+    WebKit::WebCore
 )
 
 WEBKIT_FRAMEWORK_DECLARE(WebKitLegacy)
@@ -46,9 +46,6 @@ endif ()
 
 WEBKIT_FRAMEWORK(WebKitLegacy)
 
-if (NOT INTERNAL_BUILD)
-    add_dependencies(WebKitLegacy WebCore WebCorePrivateFrameworkHeaders)
-endif ()
 if (TARGET WebKitLegacyGUID)
     add_dependencies(WebKitLegacy WebKitLegacyGUID)
 endif ()
@@ -64,7 +61,7 @@ if (MSVC)
         COMMAND ${PERL_EXECUTABLE} ${WEBKIT_LIBRARIES_DIR}/tools/scripts/version-stamp.pl ${WebKitLegacy_DERIVED_SOURCES_DIR} $<TARGET_FILE:WebKitLegacy>
         VERBATIM)
 
-     if (NOT WTF_PLATFORM_WIN_CAIRO)
-         add_subdirectory(win/WebKitQuartzCoreAdditions)
-     endif ()
+    if (USE_CA)
+        add_subdirectory(win/WebKitQuartzCoreAdditions)
+    endif ()
 endif ()

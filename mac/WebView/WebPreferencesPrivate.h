@@ -1,18 +1,18 @@
 /*
- * Copyright (C) 2005-2017 Apple Inc. All rights reserved.
+ * Copyright (C) 2005-2020 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
  * 1.  Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer. 
+ *     notice, this list of conditions and the following disclaimer.
  * 2.  Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution. 
+ *     documentation and/or other materials provided with the distribution.
  * 3.  Neither the name of Apple Inc. ("Apple") nor the names of
  *     its contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission. 
+ *     from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -153,6 +153,9 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (BOOL)allowFileAccessFromFileURLs;
 - (void)setAllowFileAccessFromFileURLs:(BOOL)flag;
 
+- (BOOL)allowTopNavigationToDataURLs;
+- (void)setAllowTopNavigationToDataURLs:(BOOL)flag;
+
 - (BOOL)allowCrossOriginSubresourcesToAskForCredentials;
 - (void)setAllowCrossOriginSubresourcesToAskForCredentials:(BOOL)flag;
 
@@ -266,6 +269,9 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (BOOL)webAudioEnabled;
 - (void)setWebAudioEnabled:(BOOL)enabled;
 
+- (BOOL)modernUnprefixedWebAudioEnabled;
+- (void)setModernUnprefixedWebAudioEnabled:(BOOL)enabled;
+
 - (BOOL)subpixelCSSOMElementMetricsEnabled;
 - (void)setSubpixelCSSOMElementMetricsEnabled:(BOOL)enabled;
 
@@ -275,14 +281,14 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (BOOL)webGL2Enabled;
 - (void)setWebGL2Enabled:(BOOL)enabled;
 
-- (BOOL)forceSoftwareWebGLRendering;
-- (void)setForceSoftwareWebGLRendering:(BOOL)forced;
-
 - (BOOL)forceLowPowerGPUForWebGL;
 - (void)setForceWebGLUsesLowPower:(BOOL)forceLowPower;
 
 - (BOOL)webGPUEnabled;
 - (void)setWebGPUEnabled:(BOOL)enabled;
+
+- (BOOL)maskWebGLStringsEnabled;
+- (void)setMaskWebGLStringsEnabled:(BOOL)enabled;
 
 - (BOOL)accelerated2dCanvasEnabled;
 - (void)setAccelerated2dCanvasEnabled:(BOOL)enabled;
@@ -386,8 +392,6 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (BOOL)_alwaysRequestGeolocationPermission;
 - (void)_setAlwaysUseAcceleratedOverflowScroll:(BOOL)flag;
 - (BOOL)_alwaysUseAcceleratedOverflowScroll;
-- (void)_setLayoutInterval:(int)milliseconds;
-- (int)_layoutInterval; // Milliseonds.
 - (void)_setMaxParseDuration:(float)d;
 - (float)_maxParseDuration;
 - (void)_setInterpolationQuality:(int)quality;
@@ -417,7 +421,7 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (void)didRemoveFromWebView;
 
 // Full screen support is dependent on WebCore/WebKit being
-// compiled with ENABLE_FULLSCREEN_API. 
+// compiled with ENABLE_FULLSCREEN_API.
 - (void)setFullScreenEnabled:(BOOL)flag;
 - (BOOL)fullScreenEnabled;
 
@@ -513,6 +517,9 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (void)setGamepadsEnabled:(BOOL)flag;
 - (BOOL)gamepadsEnabled;
 
+- (void)setHighlightAPIEnabled:(BOOL)flag;
+- (BOOL)highlightAPIEnabled;
+
 - (void)setMediaPreloadingEnabled:(BOOL)flag;
 - (BOOL)mediaPreloadingEnabled;
 
@@ -552,6 +559,9 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (void)setCustomPasteboardDataEnabled:(BOOL)flag;
 - (BOOL)customPasteboardDataEnabled;
 
+- (void)setDialogElementEnabled:(BOOL)enabled;
+- (BOOL)dialogElementEnabled;
+
 - (BOOL)cacheAPIEnabled;
 - (void)setCacheAPIEnabled:(BOOL)enabled;
 
@@ -573,8 +583,14 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (void)setWebAnimationsEnabled:(BOOL)flag;
 - (BOOL)webAnimationsEnabled;
 
-- (void)setPointerEventsEnabled:(BOOL)flag;
-- (BOOL)pointerEventsEnabled;
+- (void)setWebAnimationsCompositeOperationsEnabled:(BOOL)flag;
+- (BOOL)webAnimationsCompositeOperationsEnabled;
+
+- (void)setWebAnimationsMutableTimelinesEnabled:(BOOL)flag;
+- (BOOL)webAnimationsMutableTimelinesEnabled;
+
+- (void)setCSSCustomPropertiesAndValuesEnabled:(BOOL)flag;
+- (BOOL)CSSCustomPropertiesAndValuesEnabled;
 
 - (void)setSyntheticEditingCommandsEnabled:(BOOL)flag;
 - (BOOL)syntheticEditingCommandsEnabled;
@@ -603,6 +619,9 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (void)setCSSLogicalEnabled:(BOOL)flag;
 - (BOOL)cssLogicalEnabled;
 
+- (void)setLineHeightUnitsEnabled:(BOOL)flag;
+- (BOOL)lineHeightUnitsEnabled;
+
 - (BOOL)adClickAttributionEnabled;
 - (void)setAdClickAttributionEnabled:(BOOL)flag;
 
@@ -612,20 +631,43 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 - (void)setCoreMathMLEnabled:(BOOL)flag;
 - (BOOL)coreMathMLEnabled;
 
+- (void)setRequestIdleCallbackEnabled:(BOOL)flag;
+- (BOOL)requestIdleCallbackEnabled;
+
+- (void)setAsyncClipboardAPIEnabled:(BOOL)flag;
+- (BOOL)asyncClipboardAPIEnabled;
+
 - (void)setLinkPreloadResponsiveImagesEnabled:(BOOL)flag;
 - (BOOL)linkPreloadResponsiveImagesEnabled;
 
+- (void)setCSSShadowPartsEnabled:(BOOL)flag;
+- (BOOL)cssShadowPartsEnabled;
+
+- (void)setLayoutFormattingContextIntegrationEnabled:(BOOL)flag;
+- (BOOL)layoutFormattingContextIntegrationEnabled;
+
+- (BOOL)isInAppBrowserPrivacyEnabled;
+- (void)setInAppBrowserPrivacyEnabled:(BOOL)flag;
+
+- (void)setWebSQLEnabled:(BOOL)flag;
+- (BOOL)webSQLEnabled;
+
+- (void)setUserGesturePromisePropagationEnabled:(BOOL)flag;
+- (BOOL)userGesturePromisePropagationEnabled;
+
 @property (nonatomic) BOOL visualViewportAPIEnabled;
 @property (nonatomic) BOOL CSSOMViewScrollingAPIEnabled;
+@property (nonatomic) BOOL CSSOMViewSmoothScrollingEnabled;
 @property (nonatomic) BOOL largeImageAsyncDecodingEnabled;
 @property (nonatomic) BOOL animatedImageAsyncDecodingEnabled;
 @property (nonatomic) BOOL javaScriptMarkupEnabled;
 @property (nonatomic) BOOL mediaDataLoadsAutomatically;
 @property (nonatomic) BOOL attachmentElementEnabled;
 @property (nonatomic) BOOL allowsInlineMediaPlaybackAfterFullscreen;
+@property (nonatomic) BOOL remotePlaybackEnabled;
 @property (nonatomic) BOOL intersectionObserverEnabled;
 @property (nonatomic) BOOL menuItemElementEnabled;
-@property (nonatomic) BOOL displayContentsEnabled;
+@property (nonatomic) BOOL keygenElementEnabled;
 @property (nonatomic) BOOL userTimingEnabled;
 @property (nonatomic) BOOL resourceTimingEnabled;
 @property (nonatomic) BOOL linkPreloadEnabled;
@@ -633,6 +675,9 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 @property (nonatomic) BOOL isSecureContextAttributeEnabled;
 @property (nonatomic) BOOL legacyEncryptedMediaAPIEnabled;
 @property (nonatomic) BOOL encryptedMediaAPIEnabled;
+@property (nonatomic) BOOL pictureInPictureAPIEnabled;
+@property (nonatomic) BOOL genericCueAPIEnabled;
+@property (nonatomic) BOOL useGPUProcessForMedia;
 @property (nonatomic) BOOL viewportFitEnabled;
 @property (nonatomic) BOOL constantPropertiesEnabled;
 @property (nonatomic) BOOL colorFilterEnabled;
@@ -648,7 +693,10 @@ extern NSString *WebPreferencesCacheModelChangedInternalNotification WEBKIT_DEPR
 @property (nonatomic) BOOL referrerPolicyAttributeEnabled;
 @property (nonatomic) BOOL resizeObserverEnabled;
 @property (nonatomic) BOOL coreMathMLEnabled;
+@property (nonatomic) BOOL requestIdleCallbackEnabled;
+@property (nonatomic) BOOL asyncClipboardAPIEnabled;
 @property (nonatomic) BOOL linkPreloadResponsiveImagesEnabled;
+@property (nonatomic) BOOL aspectRatioOfImgFromWidthAndHeightEnabled;
 
 #if TARGET_OS_IPHONE
 @property (nonatomic) BOOL quickLookDocumentSavingEnabled;

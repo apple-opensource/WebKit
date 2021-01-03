@@ -96,7 +96,7 @@ LayerFlushController::LayerFlushController(WebView* webView)
 WebViewLayerFlushScheduler::WebViewLayerFlushScheduler(LayerFlushController* flushController)
     : m_flushController(flushController)
 {
-    m_runLoopObserver = std::make_unique<WebCore::RunLoopObserver>(static_cast<CFIndex>(WebCore::RunLoopObserver::WellKnownRunLoopOrders::LayerFlush), [this]() {
+    m_runLoopObserver = makeUnique<WebCore::RunLoopObserver>(static_cast<CFIndex>(WebCore::RunLoopObserver::WellKnownRunLoopOrders::LayerFlush), [this]() {
         this->layerFlushCallback();
     });
 }
@@ -167,9 +167,8 @@ void WebViewLayerFlushScheduler::layerFlushCallback()
 + (void)initialize
 {
 #if !PLATFORM(IOS_FAMILY)
-    JSC::initializeThreading();
-    WTF::initializeMainThreadToProcessMainThread();
-    RunLoop::initializeMainRunLoop();
+    JSC::initialize();
+    WTF::initializeMainThread();
 #endif
 }
 
@@ -207,9 +206,7 @@ void WebViewLayerFlushScheduler::layerFlushCallback()
 
     pluginDatabaseClientCount++;
 
-#if USE(DICTATION_ALTERNATIVES)
-    m_alternativeTextUIController = std::make_unique<WebCore::AlternativeTextUIController>();
-#endif
+    m_alternativeTextUIController = makeUnique<WebCore::AlternativeTextUIController>();
 
     return self;
 }

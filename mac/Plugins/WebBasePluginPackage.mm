@@ -40,7 +40,6 @@
 #import <mach-o/loader.h>
 #import <wtf/Assertions.h>
 #import <wtf/MainThread.h>
-#import <wtf/ObjCRuntimeExtras.h>
 #import <wtf/RunLoop.h>
 #import <wtf/Vector.h>
 #import <wtf/text/CString.h>
@@ -55,16 +54,13 @@
 - (NSArray *)_web_lowercaseStrings;
 @end;
 
-using namespace WebCore;
-
 @implementation WebBasePluginPackage
 
 + (void)initialize
 {
 #if !PLATFORM(IOS_FAMILY)
-    JSC::initializeThreading();
-    WTF::initializeMainThreadToProcessMainThread();
-    RunLoop::initializeMainRunLoop();
+    JSC::initialize();
+    WTF::initializeMainThread();
 #endif
 }
 
@@ -155,7 +151,7 @@ using namespace WebCore;
         if (isEnabled && [isEnabled boolValue] == NO)
             continue;
 
-        MimeClassInfo mimeClassInfo;
+        WebCore::MimeClassInfo mimeClassInfo;
         
         NSArray *extensions = [[MIMEDictionary objectForKey:WebPluginExtensionsKey] _web_lowercaseStrings];
         for (NSString *extension in extensions) {
@@ -186,7 +182,7 @@ using namespace WebCore;
     pluginInfo.desc = description;
 
     pluginInfo.isApplicationPlugin = false;
-    pluginInfo.clientLoadPolicy = PluginLoadClientPolicyUndefined;
+    pluginInfo.clientLoadPolicy = WebCore::PluginLoadClientPolicy::Undefined;
 #if PLATFORM(MAC)
     pluginInfo.bundleIdentifier = self.bundleIdentifier;
     pluginInfo.versionString = self.bundleVersion;
@@ -216,7 +212,7 @@ using namespace WebCore;
     return path;
 }
 
-- (const PluginInfo&)pluginInfo
+- (const WebCore::PluginInfo&)pluginInfo
 {
     return pluginInfo;
 }

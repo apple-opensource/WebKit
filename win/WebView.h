@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006-2016 Apple Inc.  All rights reserved.
+ * Copyright (C) 2006-2019 Apple Inc.  All rights reserved.
  * Copyright (C) 2009, 2010, 2011 Appcelerator, Inc. All rights reserved.
  * Copyright (C) 2011 Brent Fulgham. All rights reserved.
  *
@@ -347,10 +347,10 @@ public:
     HRESULT STDMETHODCALLTYPE setJavaScriptURLsAreAllowed(BOOL) override;
     HRESULT STDMETHODCALLTYPE setCanStartPlugins(BOOL) override;
     HRESULT STDMETHODCALLTYPE addUserScriptToGroup(_In_ BSTR groupName, _In_opt_ IWebScriptWorld*, _In_ BSTR source, _In_ BSTR url,
-        unsigned whitelistCount, __inout_ecount_full(whitelistCount) BSTR* whitelist, unsigned blacklistCount,
-        __inout_ecount_full(blacklistCount) BSTR* blacklist, WebUserScriptInjectionTime) override;
+        unsigned allowListCount, __inout_ecount_full(allowListCount) BSTR* allowList, unsigned blockListCount,
+        __inout_ecount_full(blockListCount) BSTR* blockList, WebUserScriptInjectionTime) override;
     HRESULT STDMETHODCALLTYPE addUserStyleSheetToGroup(_In_ BSTR groupName, _In_opt_ IWebScriptWorld*, _In_ BSTR source, _In_ BSTR url,
-        unsigned whitelistCount, __inout_ecount_full(whitelistCount) BSTR* whitelist, unsigned blacklistCount, __inout_ecount_full(blacklistCount) BSTR* blacklist) override;
+        unsigned allowListCount, __inout_ecount_full(allowListCount) BSTR* allowList, unsigned blockListCount, __inout_ecount_full(blockListCount) BSTR* blockList) override;
     HRESULT STDMETHODCALLTYPE removeUserScriptFromGroup(_In_ BSTR groupName, _In_opt_ IWebScriptWorld*, _In_ BSTR url) override;
     HRESULT STDMETHODCALLTYPE removeUserStyleSheetFromGroup(_In_ BSTR groupName, _In_opt_ IWebScriptWorld*, _In_ BSTR url) override;
     HRESULT STDMETHODCALLTYPE removeUserScriptsFromGroup(_In_ BSTR groupName, _In_opt_ IWebScriptWorld*) override;
@@ -359,9 +359,9 @@ public:
     HRESULT STDMETHODCALLTYPE unused1() override;
     HRESULT STDMETHODCALLTYPE unused2() override;
     HRESULT STDMETHODCALLTYPE invalidateBackingStore(_In_opt_ const RECT*) override;
-    HRESULT STDMETHODCALLTYPE addOriginAccessWhitelistEntry(_In_ BSTR sourceOrigin, _In_ BSTR destinationProtocol, _In_ BSTR destinationHost, BOOL allowDestinationSubdomains) override;
-    HRESULT STDMETHODCALLTYPE removeOriginAccessWhitelistEntry(_In_ BSTR sourceOrigin, _In_ BSTR destinationProtocol, _In_ BSTR destinationHost, BOOL allowDestinationSubdomains) override;
-    HRESULT STDMETHODCALLTYPE resetOriginAccessWhitelists() override;
+    HRESULT STDMETHODCALLTYPE addOriginAccessAllowListEntry(_In_ BSTR sourceOrigin, _In_ BSTR destinationProtocol, _In_ BSTR destinationHost, BOOL allowDestinationSubdomains) override;
+    HRESULT STDMETHODCALLTYPE removeOriginAccessAllowListEntry(_In_ BSTR sourceOrigin, _In_ BSTR destinationProtocol, _In_ BSTR destinationHost, BOOL allowDestinationSubdomains) override;
+    HRESULT STDMETHODCALLTYPE resetOriginAccessAllowLists() override;
     HRESULT STDMETHODCALLTYPE setHistoryDelegate(_In_ IWebHistoryDelegate*) override;
     HRESULT STDMETHODCALLTYPE historyDelegate(_COM_Outptr_opt_ IWebHistoryDelegate**) override;
     HRESULT STDMETHODCALLTYPE addVisitedLinks(__inout_ecount_full(visitedURLCount) BSTR* visitedURLs, unsigned visitedURLCount) override;
@@ -391,9 +391,9 @@ public:
     HRESULT STDMETHODCALLTYPE setCustomBackingScaleFactor(double) override;
     HRESULT STDMETHODCALLTYPE backingScaleFactor(_Out_ double*) override;
     HRESULT STDMETHODCALLTYPE addUserScriptToGroup(_In_ BSTR groupName, _In_opt_ IWebScriptWorld*, _In_ BSTR source, _In_ BSTR url,
-        unsigned whitelistCount, __inout_ecount_full(whitelistCount) BSTR* whitelist, unsigned blacklistCount, __inout_ecount_full(blacklistCount) BSTR* blacklist, WebUserScriptInjectionTime, WebUserContentInjectedFrames) override;
+        unsigned allowListCount, __inout_ecount_full(allowListCount) BSTR* allowList, unsigned blockListCount, __inout_ecount_full(blockListCount) BSTR* blockList, WebUserScriptInjectionTime, WebUserContentInjectedFrames) override;
     HRESULT STDMETHODCALLTYPE addUserStyleSheetToGroup(_In_ BSTR groupName, _In_opt_ IWebScriptWorld*, _In_ BSTR source, _In_ BSTR url,
-        unsigned whitelistCount, __inout_ecount_full(whitelistCount) BSTR* whitelist, unsigned blacklistCount, __inout_ecount_full(blacklistCount) BSTR* blacklist, WebUserContentInjectedFrames) override;
+        unsigned allowListCount, __inout_ecount_full(allowListCount) BSTR* allowList, unsigned blockListCount, __inout_ecount_full(blockListCount) BSTR* blockList, WebUserContentInjectedFrames) override;
 
     // IWebViewPrivate3
     HRESULT STDMETHODCALLTYPE layerTreeAsString(_Deref_opt_out_ BSTR*) override;
@@ -555,7 +555,7 @@ private:
 
     void performLayeredWindowUpdate();
 
-    WebCore::DragOperation keyStateToDragOperation(DWORD grfKeyState) const;
+    OptionSet<WebCore::DragOperation> keyStateToDragOperation(DWORD grfKeyState) const;
 
     // FIXME: This variable is part of a workaround. The drop effect (pdwEffect) passed to Drop is incorrect. 
     // We set this variable in DragEnter and DragOver so that it can be used in Drop to set the correct drop effect. 
@@ -566,7 +566,7 @@ private:
     // GraphicsLayerClient
     void notifyAnimationStarted(const WebCore::GraphicsLayer*, const String&, MonotonicTime) override;
     void notifyFlushRequired(const WebCore::GraphicsLayer*) override;
-    void paintContents(const WebCore::GraphicsLayer*, WebCore::GraphicsContext&, OptionSet<WebCore::GraphicsLayerPaintingPhase>, const WebCore::FloatRect& inClip, WebCore::GraphicsLayerPaintBehavior) override;
+    void paintContents(const WebCore::GraphicsLayer*, WebCore::GraphicsContext&, const WebCore::FloatRect& inClip, WebCore::GraphicsLayerPaintBehavior) override;
 
 #if USE(CA)
     // CACFLayerTreeHostClient
@@ -617,7 +617,7 @@ protected:
 #endif
 
     ULONG m_refCount { 0 };
-#if !ASSERT_DISABLED
+#if ASSERT_ENABLED
     bool m_deletionHasBegun { false };
 #endif
     HWND m_hostWindow { nullptr };
@@ -680,7 +680,7 @@ protected:
 
     static bool s_allowSiteSpecificHacks;
 
-    WebCore::SuspendableTimer* m_closeWindowTimer { nullptr };
+    WebCore::SuspendableTimerBase* m_closeWindowTimer { nullptr };
     std::unique_ptr<TRACKMOUSEEVENT> m_mouseOutTracker;
 
     HWND m_topLevelParent { nullptr };

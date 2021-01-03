@@ -50,8 +50,8 @@ static WebCore::FontCascade& fontFromNSFont(NSFont *font)
 
 + (void)initialize
 {
-    JSC::initializeThreading();
-    WTF::initializeMainThreadToProcessMainThread();
+    JSC::initialize();
+    WTF::initializeMainThread();
 }
 
 + (NSString *)centerTruncateString:(NSString *)string toWidth:(float)maxWidth

@@ -70,9 +70,8 @@ using namespace WebCore;
 
 + (void)initialize
 {
-    JSC::initializeThreading();
-    WTF::initializeMainThreadToProcessMainThread();
-    RunLoop::initializeMainRunLoop();
+    JSC::initialize();
+    WTF::initializeMainThread();
     WebKit::sendUserChangeNotifications();
 }
 
@@ -665,7 +664,7 @@ ALLOW_DEPRECATED_IMPLEMENTATIONS_END
     return [self window] ? [self window] : [[self webView] hostWindow];
 }
 
-- (WebCore::HTMLPlugInElement*)element
+- (NakedPtr<WebCore::HTMLPlugInElement>)element
 {
     return _element.get();
 }

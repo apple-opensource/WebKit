@@ -97,9 +97,8 @@ ALLOW_DEPRECATED_IMPLEMENTATIONS_END
 
 + (void)initialize
 {
-    JSC::initializeThreading();
-    WTF::initializeMainThreadToProcessMainThread();
-    RunLoop::initializeMainRunLoop();
+    JSC::initialize();
+    WTF::initializeMainThread();
 }
 
 + (WebIconDatabase *)sharedIconDatabase
